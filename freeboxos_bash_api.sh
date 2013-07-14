@@ -15,7 +15,7 @@ esac
 ######## FUNCTIONS ########
 function get_json_value_for_key {
     local value=$(echo "$1" | \
-     sed -n $SED_REX 's/\\\//\//g;s/^ *\{//;s/\} *$//;s/.*"?'$2'"?:(.*)/\1/p')
+     sed -n $SED_REX 's/\\\//\//g;s/^ *\{//;s/\} *$//;s/.*"'$2'":(.*)/\1/p')
     case "$value" in
         # new json { } block
         {*) echo "$value"
