@@ -27,7 +27,7 @@ function get_json_value_for_key {
              ;;
         # all other use , as field separator
         *)
-           echo "${value%%,*}"
+           echo "${value%%,*}" | tr -d '}'
            ;;
     esac
 }
