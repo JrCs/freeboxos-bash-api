@@ -27,7 +27,7 @@ function get_json_value_for_key {
              ;;
         # all other use , as field separator
         *)
-           echo "${value%%,*}"
+           echo "${value%%,*}" | tr -d '}'
            ;;
     esac
 }
@@ -71,4 +71,41 @@ function login_freebox {
     local password=$(echo -n "$challenge" | openssl dgst -sha1 -hmac "$APP_TOKEN" | sed  's/^(stdin)= //')
     answer=$(call_freebox_api '/login/session/' "{\"app_id\":\"${APP_ID}\", \"password\":\"${password}\" }")
     _SESSION_TOKEN=$(get_json_value_for_key "$answer" session_token)
+}
+
+function authorize_freebox {
+    local APP_ID="$1"
+    local APP_NAME="$2"
+    local APP_VERSION="$3"
+    local DEVICE_NAME="$4"
+    local answer=
+
+    _check_freebox_api
+
+    answer=$(call_freebox_api 'login/authorize' "{\"app_id\":\"${APP_ID}\", \"app_name\":\"${APP_NAME}\", \"app_version\":\"${APP_VERSION}\", \"device_name\":\"${DEVICE_NAME}\" }")
+    _check_success "$answer"
+    local app_token=$(get_json_value_for_key "$answer" app_token)
+    local track_id=$(get_json_value_for_key "$answer" track_id)
+
+    echo 'Please grant/deny access to the app on the Freebox LCD...'
+    local status='pending'
+    while [ "$status" == 'pending' ]; do
+      sleep 5
+      answer=$(call_freebox_api "login/authorize/$track_id")
+      _check_success "$answer"
+      status=$(get_json_value_for_key "$answer" status)
+    done
+    local challenge=$(get_json_value_for_key "$answer" challenge)
+ 
+    cat <<EOF
+MY_APP_ID="$APP_ID"
+MY_APP_TOKEN="$app_token"
+MY_APP_NAME="$APP_NAME"
+MY_APP_VERSION="$APP_VERSION"
+MY_DEVICE_NAME="$DEVICE_NAME"
+EOF
+}
+
+function reboot_freebox {
+    _check_success "$(call_freebox_api '/system/reboot' '{}')"
 }

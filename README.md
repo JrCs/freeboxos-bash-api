@@ -19,9 +19,14 @@ Example
 
 MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="P9A8VnjqCmfJp03KJ6mEPzgXmIk9ne1yJI6qqAnYUMa9JcPn4EwDn5PhgSQtxfIe"
+MY_APP_NAME="My Wonderfull App"
+MY_APP_VERSION="1.0.0"
+MY_DEVICE_NAME="Test VM"
 
 # source the freeboxos-bash-api
 source ./freeboxos_bash_api.sh
+
+#authorize_freebox "$MY_APP_ID" "$MY_APP_NAME" "$MY_APP_VERSION" "$MY_DEVICE_NAME"; exit 0
 
 # login
 login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
