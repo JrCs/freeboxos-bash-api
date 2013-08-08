@@ -105,3 +105,7 @@ MY_APP_VERSION="$APP_VERSION"
 MY_DEVICE_NAME="$DEVICE_NAME"
 EOF
 }
+
+function reboot_freebox {
+    _check_success "$(call_freebox_api '/system/reboot' '{}')"
+}
