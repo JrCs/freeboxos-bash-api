@@ -19,9 +19,6 @@ Example
 
 MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="4uZTLMMwSyiPB42tSCWLpSSZbXIYi+d+F32tVMx2j1p8oSUUk4Awr/OMZne4RRlY"
-MY_APP_NAME="My Wonderfull App"
-MY_APP_VERSION="1.0.0"
-MY_DEVICE_NAME="Mac OSX"
 
 # source the freeboxos-bash-api
 source ./freeboxos_bash_api.sh
@@ -58,9 +55,6 @@ Authorization granted
 
 MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="4uZTLMMwSyiPB42tSCWLpSSZbXIYi+d+F32tVMx2j1p8oSUUk4Awr/OMZne4RRlY"
-MY_APP_NAME="My Wonderfull App"
-MY_APP_VERSION="1.0.0"
-MY_DEVICE_NAME="Mac OSX"
 ```
 
 #### *  login_freebox *app_id* *app_token*
@@ -71,9 +65,6 @@ It is used to log the application (you need the application token obtain from au
 
 MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="4uZTLMMwSyiPB42tSCWLpSSZbXIYi+d+F32tVMx2j1p8oSUUk4Awr/OMZne4RRlY"
-MY_APP_NAME="My Wonderfull App"
-MY_APP_VERSION="1.0.0"
-MY_DEVICE_NAME="Mac OSX"
 
 # source the freeboxos-bash-api
 source ./freeboxos_bash_api.sh

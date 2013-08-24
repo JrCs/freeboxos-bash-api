@@ -93,9 +93,6 @@ function authorize_application {
     cat <<EOF
 MY_APP_ID="$APP_ID"
 MY_APP_TOKEN="$app_token"
-MY_APP_NAME="$APP_NAME"
-MY_APP_VERSION="$APP_VERSION"
-MY_DEVICE_NAME="$DEVICE_NAME"
 EOF
 }
 
