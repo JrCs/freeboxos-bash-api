@@ -1,7 +1,7 @@
 freeboxos-bash-api
 ==================
 
-Access FreeboxOS API from bash
+Access [FreeboxOS API](http://dev.freebox.fr/sdk/os/#api-list) from bash
 
 Quick Start
 -----------
@@ -10,7 +10,7 @@ You need to have `curl` and `openssl` installed.
 
 Get the source:
 
-    $ curl -L http://https://github.com/JrCs/freeboxos-bash-api/raw/master/freeboxos_bash_api.sh > freeboxos_bash_api.sh
+    $ curl -L http://github.com/JrCs/freeboxos-bash-api/raw/master/freeboxos_bash_api.sh > freeboxos_bash_api.sh
 
 Example
 -------
@@ -29,14 +29,8 @@ login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
 # get xDSL data
 answer=$(call_freebox_api '/connection/xdsl')
 
-# get result values
-result=$(get_json_value_for_key "$answer" 'result')
-
-# get upload xDSL data from xDSL data
-up_xdsl=$(get_json_value_for_key "$result" 'up')
-
-# get up max xDSL rate from upload xDSL data
-up_max_rate=$(get_json_value_for_key "$up_xdsl" 'maxrate')
+# extract max upload xDSL rate
+up_max_rate=$(get_json_value_for_key "$up_xdsl" 'result.up.maxrate')
 
 echo "Max Upload xDSL rate: $up_max_rate kbit/s"
 ```
@@ -85,8 +79,35 @@ answer=$(call_freebox_api '/connection/xdsl')
 This function will return the value for the *key* from the *json_string*
 ##### Example
 ```bash
-value=$(get_json_value_for_key "$answer" 'maxrate')
+value=$(get_json_value_for_key "$answer" 'result.down.maxrate')
 ```
+
+#### *  dump_json_keys_values *json_string*
+This function will dump on stdout all the keys values pairs from the *json_string*
+##### Example
+```bash
+answer=$(call_freebox_api '/connection/')
+dump_json_keys_values "$answer"
+echo
+bytes_down=$(get_json_value_for_key "$answer" 'result.bytes_down')
+echo "bytes_down: $bytes_down"
+```
+<pre>
+success = true
+result.type = rfc2684
+result.rate_down = 40
+result.bytes_up = 945912
+result.rate_up = 0
+result.bandwidth_up = 412981
+result.ipv6 = 2a01:e35:XXXX:XXX::1
+result.bandwidth_down = 3218716
+result.media = xdsl
+result.state = up
+result.bytes_down = 2726853
+result.ipv4 = XX.XXX.XXX.XXX
+result = {"type":rfc2684,"rate_down":40,"bytes_up":945912,"rate_up":0,"bandwidth_up":412981,"ipv6":2a01:e35:XXXX:XXXX::1,"bandwidth_down":3218716,"media":xdsl,"state":up,"bytes_down":2726853,"ipv4":XX.XXX.XXX.XXX}
+
+bytes_down: 2726853</pre>
 
 #### *  reboot_freebox
 This function will reboot your freebox. Return code will be 0 if the freebox is rebooting, 1 otherwise.
