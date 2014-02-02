@@ -159,6 +159,15 @@ function get_json_value_for_key {
     return 1
 }
 
+function dump_json_keys_values {
+    _parse_and_cache_json "$1"
+    local key i=1 max_index=${#_JSON_DECODE_DATA_KEYS[@]};
+    while [[ $i -lt $max_index ]]; do
+        printf "%s = %s\n" "${_JSON_DECODE_DATA_KEYS[$i]}" "${_JSON_DECODE_DATA_VALUES[$i]}"
+        ((i++))
+    done
+}
+
 function _check_success {
     local value=$(get_json_value_for_key "$1" success)
     if [[ "$value" != true ]]; then
