@@ -1,0 +1,47 @@
+#! /bin/bash
+
+# NBA : 20211123 
+# NBA : Application to reboot freebox from API 
+# NBA : 20220506 
+# NBA : Modifying title + suppressing hardcoded URL 
+
+
+
+
+red='\033[01;31m'
+blue='\033[01;34m'
+green='\033[01;32m'
+norm='\033[00m'
+
+# application definition
+
+MY_APP_ID="fbx-reboot"
+MY_APP_TOKEN="put-your-app-token-here"
+
+
+
+# source the fbx-delta-nba_bash_api.sh which support HTTPS and public URL 
+# fbx-delta-nba_bash_api.sh is in the current directory
+
+cd /mnt/data/perso/freebox/api
+[[ -f "fbx-delta-nba_bash_api.sh" ]] \
+&& source ${0/`basename $0`/}/fbx-delta-nba_bash_api.sh  \
+|| bash -c 'echo -e "${red}fbx-delta-nba_bash_api.sh does not exist, exit !${norm}" && exit 33' 
+
+
+# login
+login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
+
+# usage
+#if [ -z "$1" ]; then echo usage: $0 api_name/api_arg ; exit 25 ; fi
+
+# call api
+API="system"
+echo -e "\nREBOOTING FREEBOX \n"
+echo "URL CALLED : ${FREEBOX_URL}${_API_BASE_URL}v${_API_VERSION}/"
+echo "API CALLED : $API"
+echo
+
+#reboot_freebox
+echo -e "RESULT \"reboot_freebox\" :  ${red}$(reboot_freebox)${norm}\n"
+

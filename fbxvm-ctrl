@@ -1,0 +1,111 @@
+#! /bin/bash
+
+# NBA : 20211114 
+# NBA : Application to control VMs on Freebox Delta
+# NBA : Using functions from fbx-delta-nba_bash_api.sh 
+# NBA : forked by NBA from https://github.com/JrCs/freeboxos-bash-api
+# NBA : list, start, shutdown (acpi), stop (force), restart
+# 
+# NBA : 20220506 
+# NBA : Adding support for accessing VM console from chassis using freebox delta websocket API
+# NBA : + suppressing freebox hardcoded URL (for use with HTTPS and WebSocket)
+
+
+
+MY_APP_ID="fbxvm-ctrl"
+MY_APP_TOKEN="put-your-app-token-here"
+API="vm"
+
+
+red='\033[01;31m'
+blue='\033[01;34m'
+green='\033[01;32m'
+purpl='\033[01;35m'
+norm='\033[00m'
+
+
+vmid=$1
+action=$2
+
+# source the fbx-delta-nba_bash_api.sh which support HTTPS and public URL 
+# fbx-delta-nba_bash_api.sh is in the current directory
+source ${0/`basename $0`/}/fbx-delta-nba_bash_api.sh
+
+# login
+login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
+
+# usage
+if [[ -z "$1" || -z "$2" ]]; 
+	then 
+		echo -e "\nusage: $0 ${red}id${norm} <start|shutdown(acpi)|stop(force)|restart|console>\n" 
+	i=0
+	answer=$(call_freebox_api "/$API/")
+	dump_json_keys_values "$answer" >/dev/null
+	while [[ $(get_json_value_for_key "$answer" "result[$i].name") != "" ]] 
+	do
+		name=$(get_json_value_for_key "$answer" "result[$i].name")
+		id=$(get_json_value_for_key "$answer" "result[$i].id")
+		mac=$(get_json_value_for_key "$answer" "result[$i].mac")
+		state=$(get_json_value_for_key "$answer" "result[$i].status")
+		if [ ! -z "$name" ];
+			then
+		        echo -e "\nVM-$i :" 
+			echo -e "\tname = $name" 
+			echo -e "\t${red}id = ${id}${norm}" 
+			echo -e "\tmac_address = $mac" 
+			#echo -e "\tstatus = $state" 
+		        [ "$state" == "running" ] \
+		                && echo -e "\tstatus = ${green}${state}${norm}" \
+                		|| echo -e "\tstatus = ${purpl}${state}${norm}" 
+
+		fi
+		((i++))
+	done	
+	echo
+	exit 25  
+fi
+
+
+# test param 
+
+# $1 must be a number 
+[ -n "$vmid" ] && [ "$vmid" -eq "$vmid" ] 2>/dev/null
+[ $? -ne 0 ] && echo -e "\nERROR: ${red}\"id\" must be a number${norm}\nPlease run $0 with no parameters to get usage\n" && exit 26
+
+# $2 must be one of start|shutdown|stop|restart|console
+[[ "$2" != "start" && "$2" != "stop" && "$2" != "restart" && "$2" != "shutdown" && "$2" != "console" ]] && echo -e "\nERROR: ${red}\"<action> must be one of \"start\" \"shutdown\" \"stop\" \"restart\" \"console\"${norm}\nPlease run $0 with no parameters to get usage\n" && exit 27
+
+
+
+
+# call api (global call)
+API="vm"
+echo -e "\nCONTROL FREEBOX VM\n"
+echo "URL CALLED : ${FREEBOX_URL}${_API_BASE_URL}v${_API_VERSION}/"
+echo "API CALLED : $API"
+echo "VM ID : ${vmid}"
+echo "ACTION : ${action}"
+echo
+answer=$(call_freebox_api "/$API/")
+dump_json_keys_values "$answer" >/dev/null
+#dump_json_keys_values "$answer" 
+echo -e "\nRESULT :"
+
+
+# action
+
+case "${action}" in
+	start) call_freebox_api "/$API/$vmid/$action" {}; ;;
+	restart) call_freebox_api "/$API/$vmid/$action" {}; ;;
+	shutdown) call_freebox_api "/$API/$vmid/powerbutton" {}; ;;
+	stop) call_freebox_api "/$API/$vmid/$action" {}; ;;
+	console) call_freebox-ws_api "/$API/$vmid/$action" {}; ;;
+esac
+
+echo
+
+#full=$(get_json_value_for_key "$answer" "result")
+#echo $full
+#vmdesc=$(echo $full |egrep $1)
+
+
