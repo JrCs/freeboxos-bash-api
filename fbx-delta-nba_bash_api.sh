@@ -10,14 +10,15 @@
 # APPLICATIONS will be availiable remotely if Freebox allow admin connection from internet
 #
 # Ex : my freebox delta use its own PKI and has internet access on :
-#     - Unsecure port : 20yy
-#     -   Secure port : 20xx
-#     -          URL1 : fbx.mydomain.net
-#     -          URL2 : something.fbxos.fr
+#     - Unsecure port : 2049
+#     -   Secure port : 2059
+#     -          URL1 : fbx.soartist.net
+#     -          URL2 : fu2vg7hl.fbxos.fr
 #     -           PKI : 14RV
 #     -     Signed CA : 14RV-rootCA-RSA8192
 #  CA : 14RV must be installed on the system or need to use '-k = --insecure' option of cURL
 # URL : Using URL1
+#
 #
 # 20220504 :
 # Modify by NBA for testing the add-on of websockets
@@ -28,25 +29,52 @@
 #    - using external tool : "websocat" a cURL like websockets client from :    
 #      https://github.com/vi/websocat/releases/download/v1.9.0/websocat_linux64
 #
+#
 # 20220506 : 
 # Modify to add a check_tool function because this script use several external tools
 # like "cURL" for requestion HTTP/HTTPS API and 2 others tools for exploiting 
 # WEBSOCKET API : tools are : 
 # "websocat" a cURL/ncap/socat like tool which can interract with websockets
-# "rlwrap" a line-buffer wrapper for websocat or 
-# "rlfe" a line-buffer front-end 
+# DEPRECATED on 20220509 : "rlwrap" a line-buffer wrapper for websocat 
+# DEPRECATED on 20220509 : "rlfe" a line-buffer front-end
+#
+#
+# 20220509 - part 1 - issue : 
+# Detecting issue when using websocket API to connect VM console :
+# The problem begin when after login the VM console using this websocket API function, 
+# when trying to use tools like VIM or NANO for file editting : Arrows do not work and 
+# those text editors are impossible to use, chars are not interpreted correctly
+# ==> Opening issue #152 at https://github.com/vi/websocat/issues/152
+# Maintener told me to have a look at :
+# https://github.com/vi/websocat/issues/60#issuecomment-545911812
+# Having a look at his recommendation, I made several changes to correct the issue
+# Now, we will avoid using 'rlwrap' or 'rlfe', we will use the power of 'stty' for
+# managing the behaviour of the terminal
+# --> So, we do not need anymore external 'readline' tools like 'rlwrap' or 'rlfe'
+# --> The issue is fixed 
+# --> Accessing VM console through websocket API have the expected behaviour
+#
+# 20220509 - part 2 - code & clean : 
+# --> Cleaning code (delete) where "rlwrap" or "rlfe" were use
+# --> Replacing exec file './req' by variable "${req[@]}" containing exec string
+# --> Deleting code where './req' file appears
+# --> Adding 'DEPRECATED' mention to this changelog
+#
 #
 ###########################################################################################
-##
+## 
 ## websocat install : 
 ## $ wget https://github.com/vi/websocat/releases/download/v1.9.0/websocat_linux64
 ## $ sudo cp websocat_linux64 /usr/bin/websocat_linux64
 ## $ sudo ln -s /usr/bin/websocat_linux64 /usr/bin/websocat
 ## $ sudo chmod +x /usr/bin/websocat_linux64
 #
-## WARNING : 
-## For websocat to work, you need WRITE access to this file directory
+## DEPRECATED on 20220509 : WARNING : 
+## DEPRECATED on 20220509 : For websocat to work, you need WRITE access to this file directory
 ##
+
+
+
 
 
 
@@ -309,13 +337,18 @@ function call_freebox-ws_api {
    #local data="${2-}"
     local options=("")
     local optws=("")
+    local optsttys=("")
+    local optsttye=("")
+    local req=("")
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     local wsurl=$(echo $url |sed 's@https@wss@g')
     echo
     echo Connecting VM console on Freebox websocket : $wsurl
     echo
-    # DEBUG # [[ -n "$_SESSION_TOKEN" ]] && optws+=(--text - -vvvk) \
-    [[ -n "$_SESSION_TOKEN" ]] && optws+=(--binary - -k) \
+    # DEBUG # [[ -n "$_SESSION_TOKEN" ]] && optws+=(-E --binary -vvvk) \
+    [[ -n "$_SESSION_TOKEN" ]] && optws+=(-E --binary -k) \
+    && optsttys+=(stty raw -echo) \
+    && optsttye+=(stty sane cooked) \
     && options+=(-H \"X-Fbx-App-Auth: $_SESSION_TOKEN\") \
     && options+=(-H \"Connection: Upgrade\") \
     && options+=(-H \"Upgrade: websocket\") \
@@ -328,29 +361,18 @@ function call_freebox-ws_api {
     # websocket send and recieve data interractively => no "$data" string 
     #[[ -n "$data" ]] && options+=(-d "$data")
 
-    # websocat do not support --cacert option => using "-k" (--insecure)
+    # websocat do not support --cacert option => using "-k" (--insecure) in ${optws[@]}
     #[[ -n "$FREEBOX_CACERT" ]] && options+=(--cacert "$FREEBOX_CACERT")
 
-    # NBA WRINTIG EXECUTABLE websocat SCRIPT :
-    #echo -e "rlwrap websocat ${options[@]} ${optws[@]} \"$wsurl\"\n" >./req && chmod +x ./req 
-    echo -e "rlfe websocat ${options[@]} ${optws[@]} \"$wsurl\"\n" >./req && chmod +x ./req 
-    #echo -e "websocat ${options[@]} ${optws[@]} \"$wsurl\"\n" >./req && chmod +x ./req 
-    # DEBUG :
-    #echo -e "rlwrap websocat ${options[@]} ${optws[@]} \"$wsurl\"\n"
-    #cat ./req
-    # END DEBUG
-
-    # NBA EXEC websocat SCRIPT to interract with the opened websocket API
-    ./req
+    req="${optsttys[@]}; websocat ${options[@]} ${optws[@]} \"$wsurl\"; ${optsttye[@]}"
+    # DEBUG : #echo ${req[@]}
+    bash -c "${req[@]}"
 
     # websocket send and recieve data interractively => no "$answer" string to parse
-    #answer=$(req)
-    #_check_success "$answer" || return 1
-    #echo "$answer"
+    #answer="bash -c \"${req[@]}\"" ; #_check_success "$answer" || return 1 ;  #echo "$answer"
 
     ret=$?
     echo -e "\n\nWebsocket connection is currently close" 
-    rm -f ./req
     exit $ret
 }
 
@@ -408,8 +430,7 @@ function reboot_freebox {
 _check_freebox_api
 # NBA : 20220506 
 # Call check_tool function to make sure we can use curl, websocat & rlwrap 
+# Put next line in scripts which use functions from this file
 check_tool curl
+check_tool openssl
 check_tool websocat
-check_tool rlwrap
-check_tool rlfe
-

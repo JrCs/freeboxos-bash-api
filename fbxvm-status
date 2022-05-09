@@ -3,8 +3,13 @@
 # NBA : 20211114 
 # NBA : Application to print VMs status on Freebox Delta
 # NBA : Name, ID, CPU, memory, disk-path ... 
+#
 # NBA : 20220506 
 # NBA : Modifying title + suppressing hardcoded URL 
+#
+# NBA : 20220509 
+# NBA : Calling 'check_tool' function to check for necessary external tools
+#
 
 
 
@@ -30,6 +35,11 @@ login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
 
 # usage
 #if [ -z "$1" ]; then echo usage: $0 api_name/api_arg ; exit 25 ; fi
+
+# check external tool
+check_tool curl
+check_tool openssl
+
 
 # call api
 API="vm"

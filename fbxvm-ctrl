@@ -9,7 +9,10 @@
 # NBA : 20220506 
 # NBA : Adding support for accessing VM console from chassis using freebox delta websocket API
 # NBA : + suppressing freebox hardcoded URL (for use with HTTPS and WebSocket)
-
+# 
+# NBA : 20220509 
+# NBA : Calling 'check_tool' function to check for necessary external tools
+#
 
 
 MY_APP_ID="fbxvm-ctrl"
@@ -75,7 +78,10 @@ fi
 # $2 must be one of start|shutdown|stop|restart|console
 [[ "$2" != "start" && "$2" != "stop" && "$2" != "restart" && "$2" != "shutdown" && "$2" != "console" ]] && echo -e "\nERROR: ${red}\"<action> must be one of \"start\" \"shutdown\" \"stop\" \"restart\" \"console\"${norm}\nPlease run $0 with no parameters to get usage\n" && exit 27
 
-
+# check external tool
+check_tool curl
+check_tool openssl
+check_tool websocat
 
 
 # call api (global call)
