@@ -10,10 +10,10 @@
 # APPLICATIONS will be availiable remotely if Freebox allow admin connection from internet
 #
 # Ex : my freebox delta use its own PKI and has internet access on :
-#     - Unsecure port : 2049
-#     -   Secure port : 2059
-#     -          URL1 : fbx.soartist.net
-#     -          URL2 : fu2vg7hl.fbxos.fr
+#     - Unsecure port : 20yy
+#     -   Secure port : 20xx
+#     -          URL1 : fbx.mydomain.net
+#     -          URL2 : something.fbxos.fr
 #     -           PKI : 14RV
 #     -     Signed CA : 14RV-rootCA-RSA8192
 #  CA : 14RV must be installed on the system or need to use '-k = --insecure' option of cURL
