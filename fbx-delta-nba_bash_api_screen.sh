@@ -1,5 +1,6 @@
 #!/bin/bash
 
+### SCREEN VERSION
 ###########################################################################################
 # 20211114 
 # NBA : fbx-delta-nba_bash_api.sh : function for Freebox http/ws API 
@@ -66,7 +67,7 @@
 # --> Optimizing code : 
 #          - using websocat dedicated options for specific headers
 #          - supressing automatically fullfilled headers
-# --> Testing code to launch the websocket in a screen (stty don't trap SIGINT, screen does) 
+# --> Adding code to launch the websocket in a screen (stty don't trap SIGINT, screen does) 
 #
 ###########################################################################################
 ## 
@@ -394,10 +395,10 @@ function call_freebox-ws_api {
 
     req="${optsttys[@]}; websocat ${options[@]} ${optws[@]} \"$wsurl\"; ${optsttye[@]}"
     # DEBUG : # echo ${req[@]}
-    bash -c "${req[@]}"
+    #bash -c "${req[@]}"
     #bash -c "sigint () { kill -INT -$$; }; trap sigint INT ; ${req[@]}"
-    #screen  ${optscreen[@]} bash -c "${req[@]}" 
-    #screen -r fbxws
+    screen  ${optscreen[@]} bash -c "${req[@]}" 
+    screen -r fbxws
 
     ret=$?
     echo -e "\n\nWebsocket connection is currently close" 
