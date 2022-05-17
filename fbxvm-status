@@ -21,8 +21,8 @@ norm='\033[00m'
 
 # application definition
 
-MY_APP_ID="fbxvm-status"
-MY_APP_TOKEN="put-your-app-token-here"
+MY_APP_ID="yourapp"
+MY_APP_TOKEN="yourtoken"
 
 
 # source the fbx-delta-nba_bash_api.sh which support HTTPS and public URL 

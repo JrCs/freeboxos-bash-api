@@ -20,13 +20,14 @@ norm='\033[00m'
 
 # application definition
 
-MY_APP_ID="fbx-reboot"
-MY_APP_TOKEN="put-your-app-token-here"
+MY_APP_ID="app-reboot-fbx"
+MY_APP_TOKEN="app-reboot-fbx_token"
 
 
 
 # source the fbx-delta-nba_bash_api.sh which support HTTPS and public URL 
 # fbx-delta-nba_bash_api.sh is in the current directory
+# path to fbx-delta-nba_bash_api.sh is hardcoded here
 
 cd /mnt/data/perso/freebox/api
 [[ -f "fbx-delta-nba_bash_api.sh" ]] \
