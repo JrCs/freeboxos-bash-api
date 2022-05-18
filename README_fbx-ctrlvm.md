@@ -87,6 +87,15 @@ EXAMPLE:
 fbxvm-ctrl resize disk disk_shrink="0" disk_path="/freeboxdisk/vmdiskpath/myvmdisk.qcow2" size="10737418240"     
 
 --------------------------------------------------------------------------------------------------------------------
+	
+fbxvm-ctrl del disk 14RV-FSRV-133.qcow2
+
+ERROR: you must specify the option "disk_path="
+
+EXAMPLE:
+fbxvm-ctrl del disk disk_path="/FBX-2000G/box-vm/14RV-FSRV-49.qcow2"
+	
+--------------------------------------------------------------------------------------------------------------------
 
 $ fbxvm-ctrl add vm
 
@@ -114,6 +123,13 @@ name=
 EXAMPLE:
 fbxvm-ctrl add vm disk_type="qcow2" disk_path="/freeboxdisk/vmdiskpath/myvmdisk.qcow2" vcpus="1" memory="2048" cd_path="/freeboxdisk/vmisopath/debian-11.0.0-arm64-netinst.iso" os="debian" enable_screen="true" cloudinit_hostname="14RV-FSRV-49" cloudinit_userdata="cloudinit-userdata.yml" bind_usb_ports='"usb-external-type-c","usb-external-type-a"' name="14RV-FSRV-49.dmz.lan"
 
+--------------------------------------------------------------------------------------------------------------------
+fbxvm-ctrl del vm
+
+ERROR: you must specify a VM id
+
+EXAMPLE:
+fbxvm-ctrl del vm 31 
 
 --------------------------------------------------------------------------------------------------------------------
   
