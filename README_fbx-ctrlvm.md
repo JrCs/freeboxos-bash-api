@@ -252,7 +252,7 @@ VERB|VM ID : 12
 ACTION : detail
 RESULT :
 
-VM-11 : Full details properties :
+VM-12 : Full details properties :
 
 	name = 14RV-FSRV-12
 	id = 12
