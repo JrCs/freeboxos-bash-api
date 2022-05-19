@@ -1,4 +1,4 @@
-freeboxos-bash-api
+fbx-delta-nba_bash_api.sh
 ==================
 
 Access [FreeboxOS API](http://dev.freebox.fr/sdk/os/#api-list) from bash
