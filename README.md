@@ -10,7 +10,7 @@ You need to have `curl` and `openssl` installed.
 
 Get the source:
 
-    $ curl -L https://github.com/nbanb/fbx-delta-nba_bash_api.sh/blob/nbanb-freebox-api/fbx-delta-nba_bash_api.sh > fbx-delta-nba_bash_api.sh
+    $ curl -L https://github.com/nbanb/fbx-delta-nba_bash_api.sh/raw/nbanb-freebox-api/fbx-delta-nba_bash_api.sh > fbx-delta-nba_bash_api.sh
 
 Example
 -------
@@ -20,7 +20,7 @@ Example
 MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="4uZTLMMwSyiPB42tSCWLpSSZbXIYi+d+F32tVMx2j1p8oSUUk4Awr/OMZne4RRlY"
 
-# source the freeboxos-bash-api
+# source the fbx-delta-nba_bash_api.sh
 source ./fbx-delta-nba_bash_api.sh
 
 # login
@@ -60,8 +60,8 @@ It is used to log the application (you need the application token obtain from au
 MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="4uZTLMMwSyiPB42tSCWLpSSZbXIYi+d+F32tVMx2j1p8oSUUk4Awr/OMZne4RRlY"
 
-# source the freeboxos-bash-api
-source ./freeboxos_bash_api.sh
+# source the fbx-delta-nba_bash_api.sh
+source ./fbx-delta-nba_bash_api.sh
 
 # login
 login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
