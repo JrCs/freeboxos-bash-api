@@ -10,7 +10,7 @@ You need to have `curl` and `openssl` installed.
 
 Get the source:
 
-    $ curl -L http://github.com/JrCs/freeboxos-bash-api/raw/master/freeboxos_bash_api.sh > freeboxos_bash_api.sh
+    $ curl -L https://github.com/nbanb/fbx-delta-nba_bash_api.sh/blob/nbanb-freebox-api/fbx-delta-nba_bash_api.sh > fbx-delta-nba_bash_api.sh
 
 Example
 -------
@@ -21,7 +21,7 @@ MY_APP_ID="MyWonderfull.app"
 MY_APP_TOKEN="4uZTLMMwSyiPB42tSCWLpSSZbXIYi+d+F32tVMx2j1p8oSUUk4Awr/OMZne4RRlY"
 
 # source the freeboxos-bash-api
-source ./freeboxos_bash_api.sh
+source ./fbx-delta-nba_bash_api.sh
 
 # login
 login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
@@ -42,7 +42,7 @@ API
 It is used to obtain a token to identify a new application (need to be done only once)
 ##### Example
 ```bash
-$ source ./freeboxos_bash_api.sh
+$ source ./fbx-delta-nba_bash_api.sh
 $ authorize_application  'MyWonderfull.app'  'My Wonderfull App'  '1.0.0'  'Mac OSX'
 Please grant/deny access to the app on the Freebox LCD...
 Authorization granted
