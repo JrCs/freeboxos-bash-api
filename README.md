@@ -67,13 +67,50 @@ source ./fbx-delta-nba_bash_api.sh
 login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
 ```
 
-#### *  call_freebox_api *api_path*
+#### *  call_freebox_api *api_path* *{optionnal_json_object}*
 It is used to call a freebox API. The function will return a json string with an exit code of 0 if successfull. Otherwise it will return an empty string with an exit code of 1 and the reason of the error output to STDERR.
 You can find the list of all available api [here](http://dev.freebox.fr/sdk/os/#api-list)
 ##### Example
 ```bash
 answer=$(call_freebox_api '/connection/xdsl')
 ```
+
+
+#### *  add_freebox_api *api_path* *{json_object}*
+It is used to call a freebox API with a define HTTP POST request forcing "Content-Type: application/json" header. The function will return a json string with an exit code of 0 if successfull. Otherwise it will return an empty string with an exit code of 1 and the reason of the error output to STDERR.
+You can find the list of all available api [here](http://dev.freebox.fr/sdk/os/#api-list)
+##### Example
+```bash
+answer=$(add_freebox_api '/vm/create' '{create_vm_json_object}')
+```
+
+
+#### *  update_freebox_api *api_path* *{json_object}*
+It is used to call a freebox API with a define HTTP PUT request forcing "Content-Type: application/json" header. The function will return a json string with an exit code of 0 if successfull. Otherwise it will return an empty string with an exit code of 1 and the reason of the error output to STDERR.
+You can find the list of all available api [here](http://dev.freebox.fr/sdk/os/#api-list)
+##### Example
+```bash
+answer=$(update_freebox_api '/vm/8' '{update_vm_json_object}')
+```
+
+
+#### *  del_freebox_api *api_path*
+It is used to call a freebox API with a define HTTP DELETE request. The function will return a json string with an exit code of 0 if successfull. Otherwise it will return an empty string with an exit code of 1 and the reason of the error output to STDERR.
+You can find the list of all available api [here](http://dev.freebox.fr/sdk/os/#api-list)
+##### Example
+```bash
+answer=$(del_freebox_api '/vm/8')
+```
+
+
+#### *  call_freebox-ws_api *api_path*
+It is used to call a freebox Websocket API with websocket request. It need you install 'websocat' from [here](https://github.com/vi/websocat/) The function will return a websocket interractive connection and exit with an exit code of 0 if successfull. Otherwise it will return an empty string with an exit code of 1 and the reason of the error output to STDERR.
+You can find the list of all available websocket api [here](http://dev.freebox.fr/sdk/os/#api-list)
+##### Example
+```bash
+answer=$(call_freebox-ws_api '/vm/8/console')
+```
+
 
 #### *  get_json_value_for_key *json_string* *key*
 This function will return the value for the *key* from the *json_string*
