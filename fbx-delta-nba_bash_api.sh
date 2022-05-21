@@ -14,11 +14,11 @@
 # Ex : my freebox delta use its own PKI and has internet access on :
 #     - Unsecure port : 20yy
 #     -   Secure port : 20xx
-#     -          URL1 : fbx.yourdomain.net
-#     -          URL2 : yourdomain.fbxos.fr
+#     -          URL1 : fbx.mydomain.net
+#     -          URL2 : mydomain.fbxos.fr
 #     -           PKI : 14RV
 #     -     Signed CA : 14RV-rootCA-RSA8192
-#  CA : 14RV must be installed on the system or need to use '-k = --insecure' option of cURL
+#  CA : 14RV must be installed or the system will use '-k = --insecure' option of cURL
 # URL : Using URL1
 #
 #___________
@@ -99,6 +99,20 @@
 # 20220517 :
 # --> Adding progress/wrprogress function to provide progress bar while waiting for a task
 #
+#___________
+# 20220519 :
+# --> Modifying websocat install path (new version) and check_tool function
+# --> Modifying check_tool function to show the new path for installing websocat
+#
+#___________
+# 20220520 :
+# --> Adding aarch64 (ARM-64) websocat install path (new version) 
+# --> Modifying check_tool function to show the new aarch64 path for installing websocat
+# --> Adding color support for check_tool function
+#
+#___________
+# 20220520 :
+# --> Adding better support of PKI / CA : using '-k' if certificate does not exist
 #
 ###########################################################################################
 ## 
@@ -108,10 +122,17 @@
 ## 
 ## __________________ 
 ## websocat install : 
-## $ wget https://github.com/vi/websocat/releases/download/v1.9.0/websocat_linux64
-## $ sudo cp websocat_linux64 /usr/bin/websocat_linux64
-## $ sudo ln -s /usr/bin/websocat_linux64 /usr/bin/websocat
-## $ sudo chmod +x /usr/bin/websocat_linux64
+## amd64/emt64
+## $ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.x86_64-unknown-linux-musl >websocat-1.10_x86_64
+## $ sudo cp websocat-1.10_x86_64 /usr/bin/websocat-1.10_x86_64
+## $ sudo ln -s /usr/bin/websocat-1.10_x86_64 /usr/bin/websocat
+## $ sudo chmod +x /usr/bin/websocat-1.10_x86_64
+## 
+## arm64: aarch64
+## $ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.aarch64-unknown-linux-musl >websocat-1.10_aarch64 
+## $ sudo cp websocat-1.10_aarch64 /usr/bin/websocat-1.10_aarch64
+## $ sudo ln -s /usr/bin/websocat-1.10_aarch64 /usr/bin/websocat
+## $ sudo chmod +x /usr/bin/websocat-1.10_aarch64
 ## 
 ## _________________________
 ## external program needed : 
@@ -143,8 +164,10 @@ FREEBOX_URL="https://fbx.mydomain.net:2011"
 # wget does support such CA and certificate but we're using cURL here !
 # A workarround is to specify either '-k = --insecure' on cURL command line (bad)
 # or to specify the 8192 CA public key on cURL command line (preferred)
+# In 2022, cURL now support such 8192 CA but keeping in the code this PKI support 
 
 FREEBOX_CACERT='/usr/share/ca-certificates/nba/14rv-rootCA-RSA8192.pem'
+[[ ! -f "$FREEBOX_CACERT" ]] && FREEBOX_CACERT=''
 
 # 20211116 NBA change API version to v8 (actual is 8.4)
 # (real values are fullfiled automatically by function _check_freebox_api ) 
@@ -155,7 +178,7 @@ _API_BASE_URL="/api/"
 
 # Temporary session tooken 
 
-_SESSION_TOKEN="PFK0tGTHPI7gz45qNm3khBxt56GhzKm6yE57e2BZrmu38LKwmbaOyYMUpz0RIjSU"
+_SESSION_TOKEN="PFK0tGTH09QAG3NImHgZVIeXBo09QAG3NImHgZVIeXBo8LKwmbaOyYMUpz0RIjSU"
 
 
 
@@ -182,8 +205,11 @@ fi
 red='\033[01;31m'
 RED='\033[31m'
 blue='\033[01;34m'
+BLUE='\033[34m'
 green='\033[01;32m'
+GREEN='\033[32m'
 purpl='\033[01;35m'
+PURPL='\033[35m'
 norm='\033[00m'
 
 ######## FUNCTIONS ########
@@ -196,17 +222,20 @@ function check_tool() {
   cmd=$1
   if ! command -v $cmd &>/dev/null
   then
-    echo -e "${RED}$cmd${norm} could not be found"
-    echo -e "Please install ${RED}$cmd${norm}"
-    [[ "$cmd" == "websocat" ]] && cat << EOW
+    echo -e "\n${RED}$cmd${norm} could not be found. Please install ${RED}$cmd${norm}\n"
+    [[ "$cmd" == "websocat" ]] && echo -e "${GREEN}websocat install on amd64/emt64${norm}
+$ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.x86_64-unknown-linux-musl >websocat-1.10_x86_64
+$ sudo cp websocat-1.10_x86_64 /usr/bin/websocat-1.10_x86_64
+$ sudo ln -s /usr/bin/websocat-1.10_x86_64 /usr/bin/websocat
+$ sudo chmod +x /usr/bin/websocat-1.10_x86_64
 
-websocat install : 
-$ wget https://github.com/vi/websocat/releases/download/v1.9.0/websocat_linux64
-$ sudo cp websocat_linux64 /usr/bin/websocat_linux64
-$ sudo ln -s /usr/bin/websocat_linux64 /usr/bin/websocat
-$ sudo chmod +x /usr/bin/websocat_linux64
-
-EOW
+${GREEN}websocat install on arm64: aarch64${norm}
+$ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.aarch64-unknown-linux-musl >websocat-1.10_aarch64 
+$ sudo cp websocat-1.10_aarch64 /usr/bin/websocat-1.10_aarch64
+$ sudo ln -s /usr/bin/websocat-1.10_aarch64 /usr/bin/websocat
+$ sudo chmod +x /usr/bin/websocat-1.10_aarch64
+"
+#EOW
     exit 31
   fi
 }
@@ -393,7 +422,11 @@ function _check_success {
 }
 
 function _check_freebox_api {
-    local answer=$(curl -s --cacert $FREEBOX_CACERT "$FREEBOX_URL/api_version")
+    local options=("")
+    [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
+            && options+=(--cacert "$FREEBOX_CACERT") \
+            || options+=("-k")
+    local answer=$(curl -s "${options[@]}" "$FREEBOX_URL/api_version")
     _API_VERSION=$(get_json_value_for_key "$answer" api_version | sed 's/\..*//')
     _API_BASE_URL=$(get_json_value_for_key "$answer" api_base_url)
 }
@@ -405,7 +438,9 @@ function call_freebox_api {
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     [[ -n "$_SESSION_TOKEN" ]] && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")
     [[ -n "$data" ]] && options+=(-d "$data")
-    [[ -n "$FREEBOX_CACERT" ]] && options+=(--cacert "$FREEBOX_CACERT")
+    [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
+	    && options+=(--cacert "$FREEBOX_CACERT") \
+	    || options+=("-k")
     answer=$(curl -s "$url" "${options[@]}")
     _check_success "$answer" || return 1
     echo "$answer"
@@ -419,7 +454,10 @@ function call_freebox_api2 {
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     [[ -n "$_SESSION_TOKEN" ]] && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")
     [[ -n "$data" ]] && options+=(-d "$data")
-    [[ -n "$FREEBOX_CACERT" ]] && options+=(--cacert "$FREEBOX_CACERT")
+   #[[ -n "$FREEBOX_CACERT" ]] && options+=(--cacert "$FREEBOX_CACERT")
+    [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
+            && options+=(--cacert "$FREEBOX_CACERT") \
+            || options+=("-k")
     echo "curl -s \"$url\" \"${options[@]}\""
     answer=$(curl -s "$url" "${options[@]}")
     _check_success "$answer" || return 1
@@ -436,10 +474,11 @@ function update_freebox_api {
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     [[ -n "$_SESSION_TOKEN" ]] \
 	    && options+=(-H "Content-Type: application/json")\
-	    && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")
-    [[ -n "$FREEBOX_CACERT" ]] \
-	    && options+=(--cacert "$FREEBOX_CACERT") \
+	    && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")\
 	    && options+=(-X PUT)
+    [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
+            && options+=(--cacert "$FREEBOX_CACERT") \
+            || options+=("-k")
     [[ -n "$data" ]] && options+=(-d "${data}")
     #echo -e "curl -s \"$url\" ${options[@]}\n" # debug
     answer=$(curl -s "$url" "${options[@]}")
@@ -454,10 +493,11 @@ function add_freebox_api {
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     [[ -n "$_SESSION_TOKEN" ]] \
 	    && options+=(-H "Content-Type: application/json")\
-	    && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")
-    [[ -n "$FREEBOX_CACERT" ]] \
-	    && options+=(--cacert "$FREEBOX_CACERT") \
+	    && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")\
 	    && options+=(-X POST)
+    [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
+            && options+=(--cacert "$FREEBOX_CACERT") \
+            || options+=("-k")	    
     [[ -n "$data" ]] && options+=(-d "${data}")
    # echo -e "curl -s \"$url\" ${options[@]}\n" # debug
     answer=$(curl -s "$url" "${options[@]}")
@@ -471,10 +511,11 @@ function del_freebox_api {
     local options=("")
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     [[ -n "$_SESSION_TOKEN" ]] \
-            && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")
-    [[ -n "$FREEBOX_CACERT" ]] \
-            && options+=(--cacert "$FREEBOX_CACERT") \
+            && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")\
             && options+=(-X DELETE)
+    [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
+            && options+=(--cacert "$FREEBOX_CACERT") \
+            || options+=("-k")	    
     [[ -n "$data" ]] && options+=(-d "${data}")
     #echo -e "curl -s \"$url\" ${options[@]}\n" # debug
     answer=$(curl -s "$url" "${options[@]}")
@@ -492,12 +533,7 @@ function del_freebox_api {
 ## but cURL do not allow interractive websocket flows and do not support 'ws://' addresses
 
 
-## ==> NEED EXTERNAL PACKAGES (in 2022) : "websocat" : install : 
-## $ wget https://github.com/vi/websocat/releases/download/v1.9.0/websocat_linux64
-## $ sudo cp websocat_linux64 /usr/bin/websocat_linux64
-## $ sudo ln -s /usr/bin/websocat_linux64 /usr/bin/websocat
-## $ sudo chmod +x /usr/bin/websocat_linux64
-
+## ==> NEED EXTERNAL PACKAGES (in 2022) : "websocat" : see header for install  
 
 
 ## NB1 : 
@@ -540,7 +576,7 @@ function call_freebox-ws_api {
     local req=("")
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     local wsurl=$(echo $url |sed 's@https@wss@g')
-    echo -e "Connecting Freebox websocket : $wsurl\n"
+    echo -e "\nConnecting Freebox websocket : $wsurl\n"
     [[ -n "$_SESSION_TOKEN" ]] \
     && options+=(-H \"X-Fbx-App-Auth: $_SESSION_TOKEN\") \
     && optws+=(--origin $FREEBOX_URL) \
@@ -554,7 +590,7 @@ function call_freebox-ws_api {
 
     # DEBUG : # echo ${req[@]}
     #bash -c "${req[@]}"  
-
+        
     [[ ! -n "$mode" ]] \
     && echo -e "${red}EXIT : Kill 'websocat' from another console, ex:${norm}" \
     && echo -e "$ pkill websocat" \
@@ -563,7 +599,7 @@ function call_freebox-ws_api {
     [[ "$mode" == "detached" ]] \
     && dtach -n /tmp/fbxws.$sockname bash -c "${req[@]}" \
     && echo -e "${red}Switching to terminal ...... type CTRL+K to EXIT${norm}" \
-    && sleep 1.2 \
+    && sleep 1.5 \
     && dtach -a /tmp/fbxws.$sockname -e '^K' \
     && [[ ! -z "$(pgrep websocat)" ]] && kill -9 $(pgrep websocat)
 
