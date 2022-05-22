@@ -153,3 +153,24 @@ The application must be granted to modify the setup of the freebox (from freebox
 ```bash
 reboot_freebox
 ```
+
+
+#### *  status_freebox
+This function will return a json containing your freebox global status/infos (CPU, TEMP, FAN, DISK, etc). 
+To be parsed by the script calling this function.
+Return code will be 0 if the freebox is rebooting, 1 otherwise.
+##### Example
+```bash
+status_freebox
+```
+Result : 
+```bash
+{"success":true,"result":{"mac":"34:27:92:xx:xx:xx","sensors":[{"id":"temp_hdd1","name":"Disque dur 2","value":39},{"id":"temp_hdd3","name":"Disque dur 4","value":40},{"id":"temp_hdd2","name":"Disque dur 3","value":45},{"id":"temp_hdd0","name":"Disque dur 1","value":47},{"id":"temp_t2","name":"Température 2","value":51},{"id":"temp_t1","name":"Température 1","value":47},{"id":"temp_t3","name":"Température 3","value":47},{"id":"temp_cpu_cp_slave","name":"Température CPU CP Slave","value":80},{"id":"temp_cpu_ap","name":"Température CPU AP","value":71},{"id":"temp_cpu_cp_master","name":"Température CPU CP Master","value":80}],"model_info":{"customer_hdd_slots":4,"net_operator":"free_fra","supported_languages":["fra"],"has_dsl":true,"has_dect":true,"wifi_country":"FR","has_home_automation":true,"wifi_type":"2d4_5g_5g","pretty_name":"Freebox v7 (r1)","has_lan_sfp":true,"name":"fbxgw7-r1\/full","has_separate_internal_storage":true,"internal_hdd_size":0,"default_language":"fra","has_vm":true,"has_expansions":true},"fans":[{"id":"fan1_speed","name":"Ventilateur 2","value":2401},{"id":"fan0_speed","name":"Ventilateur 1","value":4208}],"expansions":[{"type":"security","present":true,"slot":1,"probe_done":true,"supported":true,"bundle":"985700J12345678"},{"type":"ftth_pon","present":true,"slot":2,"probe_done":true,"supported":true,"bundle":"955800A12345678"}],"board_name":"fbxgw7r","disk_status":"active","uptime":"8 jours 14 heures 53 minutes 21 secondes","uptime_val":744801,"user_main_storage":"FBX-500G","box_authenticated":true,"serial":"957602K123456789","firmware_version":"4.5.7"}}
+```
+
+#### *  check_tool
+This function will check for external tool needed when running this program. Return code will be 0 if the freebox is rebooting, exit with a return code of 31 otherwise.
+##### Example
+```bash
+check_tool websocat
+```
