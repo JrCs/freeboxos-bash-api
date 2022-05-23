@@ -158,7 +158,7 @@ reboot_freebox
 #### *  status_freebox
 This function will return a json containing your freebox global status/infos (CPU, TEMP, FAN, DISK, etc). 
 To be parsed by the script calling this function.
-Return code will be 0 if the freebox is rebooting, 1 otherwise.
+Return code will be 0 if the freebox is alive and send its status, 1 otherwise.
 ##### Example
 ```bash
 status_freebox
