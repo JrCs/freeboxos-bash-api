@@ -1,0 +1,10 @@
+
+Ths project is fork from JrCs/freeboxos-bash-api : 
+https://github.com/JrCs/freeboxos-bash-api
+The original project did not licensed the code.
+All modifications and addition to the library could be in a separate 
+librairy but it will not be user-friendly.
+So I rename the project and add several (a lot) modifications and
+additions. All these additions and modifications will be under the 
+LICENSE describes in the LICENSE file of this current directory.
+2022-05-23 - nbanba
