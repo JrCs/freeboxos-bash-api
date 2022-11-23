@@ -112,7 +112,31 @@
 #
 #___________
 # 20220520 :
-# --> Adding better support of PKI / CA : using '-k' if certificate does not exist
+# --> Adding better support of cURL PKI / CA : using '-k' if certificate does not exist
+#
+#___________
+# 20220605 :
+# --> Adding support of PKI / CA to 'websocat' : 
+# --> using 'SSL_CERT_FILE=/path/to/ca/certificate' if a CA certificate is found
+# --> using '-k' (= --insecure)  if certificate does not exist
+#
+#___________
+# 20220616 : 
+# --> Adding the functionnality to exit 'websocat' from client or target when terminal is in raw mode
+# --> Now, GNU dtach or GNU screen are really less mandatory
+# --> This is a new functionality developped for this use case by Vitaly Shukela (websocat developper)
+# --> See NB3 & NB4 comment later in the code (details + possibility of tuning exit char) 
+# --> Exit char is set to CTRL+K or ASCII DEC 11 (can be modify in this lib file)
+#
+#___________
+# 20220628 : 
+# --> Adding function to get hardware ressource globaly bind to VM
+# --> Adding function to get all vm full details
+#
+#___________
+# 20221123 : 
+#--> Switching to websocat-1.11 which included "Escape Char when terminal is un raw mode"
+#--> "Escape Char when terminal is un raw mode" function had been developped for this use case 
 #
 ###########################################################################################
 ## 
@@ -123,25 +147,36 @@
 ## __________________ 
 ## websocat install : 
 ## amd64/emt64
-## $ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.x86_64-unknown-linux-musl >websocat-1.10_x86_64
-## $ sudo cp websocat-1.10_x86_64 /usr/bin/websocat-1.10_x86_64
-## $ sudo ln -s /usr/bin/websocat-1.10_x86_64 /usr/bin/websocat
-## $ sudo chmod +x /usr/bin/websocat-1.10_x86_64
+## $ curl -L https://github.com/vi/websocat/releases/download/v1.11.0/websocat.x86_64-unknown-linux-musl >websocat-1.11_x86_64
+## $ sudo cp websocat-1.11_x86_64 /usr/bin/websocat-1.11_x86_64
+## $ sudo ln -s /usr/bin/websocat-1.11_x86_64 /usr/bin/websocat
+## $ sudo chmod +x /usr/bin/websocat-1.11_x86_64
 ## 
 ## arm64: aarch64
-## $ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.aarch64-unknown-linux-musl >websocat-1.10_aarch64 
-## $ sudo cp websocat-1.10_aarch64 /usr/bin/websocat-1.10_aarch64
-## $ sudo ln -s /usr/bin/websocat-1.10_aarch64 /usr/bin/websocat
-## $ sudo chmod +x /usr/bin/websocat-1.10_aarch64
+## $ curl -L https://github.com/vi/websocat/releases/download/v1.11.0/websocat.aarch64-unknown-linux-musl >websocat-1.11_aarch64 
+## $ sudo cp websocat-1.11_aarch64 /usr/bin/websocat-1.11_aarch64
+## $ sudo ln -s /usr/bin/websocat-1.11_aarch64 /usr/bin/websocat
+## $ sudo chmod +x /usr/bin/websocat-1.11_aarch64
 ## 
+##______________________________
+## websocat build (optionnal) :
+## If you prefer, you can build websocat from the latest source : 
+## - Firts install 'rust' : 
+## $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+## if needed, install required / missing lib (under debian : apt -f install && apt install libxxxx) 
+## - Second build websocat 
+## $ cargo install --features=ssl --git https://github.com/vi/websocat
+##
+## NOTA BENE : I can build/compile/crosscompile websocat for you if you need, just ask !
+##
 ## _________________________
 ## external program needed : 
 ## --> cURL (curl)
 ## --> openssl
 ## --> GNU coreutils
 ## --> websocat (see "websocat install" above)
-## --> GNU screen (optionnal)
-## --> GNU detach (optionnal BUT recommended)
+## --> GNU screen (optionnal only)
+## --> GNU detach (optionnal only)
 ## 
 ##
 #   
@@ -159,8 +194,9 @@
 
 FREEBOX_URL="https://fbx.mydomain.net:2011"
 
-# In 2021 cURL does not natively support 8192 signed certificate signed by an 8192 CA
-# even if the 8192 rootCA is properly installed on the system.
+# In 2021 cURL (debian 10 current version) does not natively support 8192 signed 
+# certificate which are signed by an 8192 bit CA even if the 8192 rootCA is properly 
+# installed on the system.
 # wget does support such CA and certificate but we're using cURL here !
 # A workarround is to specify either '-k = --insecure' on cURL command line (bad)
 # or to specify the 8192 CA public key on cURL command line (preferred)
@@ -169,19 +205,16 @@ FREEBOX_URL="https://fbx.mydomain.net:2011"
 FREEBOX_CACERT='/usr/share/ca-certificates/nba/14rv-rootCA-RSA8192.pem'
 [[ ! -f "$FREEBOX_CACERT" ]] && FREEBOX_CACERT=''
 
-# 20211116 NBA change API version to v8 (actual is 8.4)
+# 20211116 NBA change API version to v9 (actual is 9.0)
 # (real values are fullfiled automatically by function _check_freebox_api ) 
 # Temporary filled _API_* variables 
 
-_API_VERSION="8"
+_API_VERSION="9"
 _API_BASE_URL="/api/"
 
 # Temporary session tooken 
 
 _SESSION_TOKEN="PFK0tGTH09QAG3NImHgZVIeXBo09QAG3NImHgZVIeXBo8LKwmbaOyYMUpz0RIjSU"
-
-
-
 
 
 
@@ -223,19 +256,18 @@ function check_tool() {
   if ! command -v $cmd &>/dev/null
   then
     echo -e "\n${RED}$cmd${norm} could not be found. Please install ${RED}$cmd${norm}\n"
-    [[ "$cmd" == "websocat" ]] && echo -e "${GREEN}websocat install on amd64/emt64${norm}
-$ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.x86_64-unknown-linux-musl >websocat-1.10_x86_64
-$ sudo cp websocat-1.10_x86_64 /usr/bin/websocat-1.10_x86_64
-$ sudo ln -s /usr/bin/websocat-1.10_x86_64 /usr/bin/websocat
-$ sudo chmod +x /usr/bin/websocat-1.10_x86_64
+    [[ "$cmd" == "websocat" ]] && echo -e "${GREEN}websocat install on amd64/emt64${norm}    
+$ curl -L https://github.com/vi/websocat/releases/download/v1.11.0/websocat.x86_64-unknown-linux-musl >websocat-1.11_x86_64
+$ sudo cp websocat-1.11_x86_64 /usr/bin/websocat-1.11_x86_64
+$ sudo ln -s /usr/bin/websocat-1.11_x86_64 /usr/bin/websocat
+$ sudo chmod +x /usr/bin/websocat-1.11_x86_64
 
 ${GREEN}websocat install on arm64: aarch64${norm}
-$ curl -L https://github.com/vi/websocat/releases/download/v1.10.0/websocat.aarch64-unknown-linux-musl >websocat-1.10_aarch64 
-$ sudo cp websocat-1.10_aarch64 /usr/bin/websocat-1.10_aarch64
-$ sudo ln -s /usr/bin/websocat-1.10_aarch64 /usr/bin/websocat
-$ sudo chmod +x /usr/bin/websocat-1.10_aarch64
+$ curl -L https://github.com/vi/websocat/releases/download/v1.11.0/websocat.aarch64-unknown-linux-musl >websocat-1.11_aarch64 
+$ sudo cp websocat-1.11_aarch64 /usr/bin/websocat-1.11_aarch64
+$ sudo ln -s /usr/bin/websocat-1.11_aarch64 /usr/bin/websocat
+$ sudo chmod +x /usr/bin/websocat-1.11_aarch64
 "
-#EOW
     exit 31
   fi
 }
@@ -444,7 +476,7 @@ function call_freebox_api {
     answer=$(curl -s "$url" "${options[@]}")
     _check_success "$answer" || return 1
     echo "$answer"
-    #echo "'curl -s \"$url\" \"${options[@]}\"'" >curlvar # debug
+    echo "'curl -s \"$url\" \"${options[@]}\"'" >curlvar # debug
 }
 
 function call_freebox_api2 {
@@ -454,7 +486,6 @@ function call_freebox_api2 {
     local url="$FREEBOX_URL"$( echo "/$_API_BASE_URL/v$_API_VERSION/$api_url" | sed 's@//@/@g')
     [[ -n "$_SESSION_TOKEN" ]] && options+=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN")
     [[ -n "$data" ]] && options+=(-d "$data")
-   #[[ -n "$FREEBOX_CACERT" ]] && options+=(--cacert "$FREEBOX_CACERT")
     [[ -n "$FREEBOX_CACERT" ]] && [[ -f "$FREEBOX_CACERT" ]] \
             && options+=(--cacert "$FREEBOX_CACERT") \
             || options+=("-k")
@@ -531,8 +562,6 @@ function del_freebox_api {
 #curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Host: echo.websocket.events" -H "Origin: https://www.websocket.events" https://echo.websocket.events
 
 ## but cURL do not allow interractive websocket flows and do not support 'ws://' addresses
-
-
 ## ==> NEED EXTERNAL PACKAGES (in 2022) : "websocat" : see header for install  
 
 
@@ -549,17 +578,46 @@ function del_freebox_api {
     #&& options+=(-H \"Origin: $FREEBOX_URL\")
     #==> Using websocat "--protocol" and "--origin" option
 
+
 ## NB2 : 
 # In comparison to function call_freebox_api (), call_freebox-ws_api is using websocket API
 # -->  That want to say that datastream are send and recieve interractively (stdin - stdout) 
-
 # So, compared to call_freebox_api () :
     # => no "$data" string to send (removing next line)
     #[[ -n "$data" ]] && options+=(-d "$data")
     # => no "$answer" string to parse (removing next line)
     #answer="bash -c \"${req[@]}\"" ; #_check_success "$answer" || return 1 ;  #echo "$answer"
 
-# And websocat do not support --cacert option => using "-k" (--insecure) in ${optws[@]}
+# And websocat do not support --cacert option => using "SSL_CERT_FILE" env variable 
+# or -k" (--insecure) in ${opssl[@]}
+
+
+## NB3 : 20220601 
+# It was not possible to exit websocat when terminal was in raw mode without using an external program
+# That's why the possibility to launch websocat detached (using GNU dtach) add been added in the past.
+# Same, the possibility to launch in a screen (using GNU screen) add previously been added
+# Speaking with Vitaly Shukela ('websocat' developper, see https://github.com/vi/websocat/issues/152)  
+# Vitaly release a new functionnality in websocat 1.10 specially for my use case : 
+# He add the possibility to kill the connection in raw mode from the client or target
+# He also add the possibility to define the "exit char", refering to the decimal value of the ASCII 
+# char selected. Default is ctrl+\ (ascii decimal = 28) but as on my local keyboard it need to hit
+# 3 strokes, I decide to change it to ctrl+K (asci decimal = 11) like 'ctrl kill'
+#
+# If you want to change the exit char, you may find the ascii table here :
+# https://www.physics.udel.edu/~watson/scen103/ascii.html
+#
+# You can also close he connection from the target, writing the equivalent value to the terminal :
+# echo -e "\013\c" >/proc/$$/fd/0
+# It's also possible to automatically close the connection when logout, add in ~/.bash_logout
+# something like : echo -e "Connection closed\n\013\c" >/proc/$$/fd/0
+
+
+## NB4 : 20220601 
+# I let in the code the pssibility to use dtach and screen (with additionnal external packages) but
+# it's not mandatory now to have those functionnality to exit the connection without killing websocat
+# from another terminal
+#
+
 
 ###### END NOTA BENE #####
 
@@ -568,8 +626,10 @@ function call_freebox-ws_api {
     local api_url="$1"
     local mode="$2"
     local sockname=$(echo $api_url |cut -d'/' -f3)
+    local optssl=("")
     local options=("")
     local optws=("")
+    local optwscl=("")
     local optsttys=("")
     local optsttye=("")
     local optscreen=("")
@@ -581,25 +641,30 @@ function call_freebox-ws_api {
     && options+=(-H \"X-Fbx-App-Auth: $_SESSION_TOKEN\") \
     && optws+=(--origin $FREEBOX_URL) \
     && optws+=(--protocol \"chat, superchat\") \
-    && optws+=(-E --binary -k) \
+    && optws+=(-E --binary --byte-to-exit-on 11 exit_on_specific_byte:stdio:) \
+    && optwscl+=(exit_on_specific_byte) \
     && optsttys+=(stty raw -echo) \
     && optsttye+=(stty sane cooked) \
-    && optscreen+=(-h 10000 -U -t Freebox-WS-API -dmS fbxws) 
+    && optscreen+=(-h 10000 -U -t Freebox-WS-API -dmS fbxws-$sockname) 
 
-    req="${optsttys[@]}; websocat ${options[@]} ${optws[@]} \"$wsurl\"; ${optsttye[@]}"
+    [[ -n "$FREEBOX_CACERT" ]] \
+    && optssl+=("SSL_CERT_FILE=$FREEBOX_CACERT") \
+    || optws+=(-k)     
+
+    #req="${optsttys[@]}; ${optssl[@]} websocat ${options[@]} ${optws[@]} \"$wsurl\"; ${optsttye[@]}"
+    req="${optsttys[@]}; ${optssl[@]} websocat ${options[@]} ${optws[@]} ${optwscl[@]}:${wsurl}; ${optsttye[@]}"
 
     # DEBUG : # echo ${req[@]}
     #bash -c "${req[@]}"  
         
     [[ ! -n "$mode" ]] \
-    && echo -e "${red}EXIT : Kill 'websocat' from another console, ex:${norm}" \
-    && echo -e "$ pkill websocat" \
+    && echo -e "${red}Type CTRL+K to EXIT ${norm}" \
     && bash -c "${req[@]}"  
     
     [[ "$mode" == "detached" ]] \
     && dtach -n /tmp/fbxws.$sockname bash -c "${req[@]}" \
     && echo -e "${red}Switching to terminal ...... type CTRL+K to EXIT${norm}" \
-    && sleep 1.5 \
+    && sleep 1.2 \
     && dtach -a /tmp/fbxws.$sockname -e '^K' \
     && [[ ! -z "$(pgrep websocat)" ]] && kill -9 $(pgrep websocat)
 
@@ -607,7 +672,7 @@ function call_freebox-ws_api {
     && echo -e "${red}Switching to GNU screen ...... type CTRL-A+K to EXIT${norm}" \
     && sleep 2.5 \
     && screen  ${optscreen[@]} bash -c "${req[@]}" \
-    && screen -r fbxws \
+    && screen -r fbxws-$sockname \
     && [[ ! -z "$(pgrep websocat)" ]] && kill -9 $(pgrep websocat)
 
 
@@ -665,21 +730,28 @@ function reboot_freebox {
 }
 
 function status_freebox {
-    # NBA modify for getting freebox status json from API 
-    #call_freebox_api '/system'  >/dev/null
-    call_freebox_api '/system' 
+    # NBA add for getting freebox status json from API 
+    call_freebox_api '/system'
 }
+function full_vm_detail {
+    # NBA add for getting a json with all freebox vm details from API 
+    call_freebox_api '/vm'
+}
+function vm_resource {
+    # NBA add for getting a json with hardware allocated to freebx vm from API 
+    call_freebox_api '/vm/info'
+}
+
+
 
 ######## MAIN ########
 
 # fill _API_VERSION and _API_BASE_URL variables
 _check_freebox_api
 # NBA : 20220506 
-# Call check_tool function to make sure we can use curl, websocat & rlwrap 
+# Call check_tool function to make sure we can use curl, websocat & openssl
 # Put next line in scripts which use functions from this file :
-#
 # example :
-#
 #  check_tool curl
 #  check_tool openssl
 #  check_tool websocat
