@@ -1,6 +1,6 @@
 #!/bin/bash
 
-### SCREEN VERSION
+### DEPRECATED SCREEN VERSION
 ###########################################################################################
 # 20211114 
 # NBA : fbx-delta-nba_bash_api.sh : function for Freebox http/ws API 
