@@ -156,7 +156,7 @@ $ authorize_application  'MyWonderfull.app'  'My Wonderfull App'  '1.0.0'  'GNU 
 Login with your APP_ID and APP_TOKEN 
 ```bash
 $ login_freebox "$MY_APP_ID" "$MY_APP_TOKEN"
-$ call_freebox_api /system)
+$ answer=$(call_freebox_api /system)
 $ get_json_value_for_key "$answer" result.model_info.net_operator
 ```
 ```bash
