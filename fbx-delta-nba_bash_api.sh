@@ -29,6 +29,9 @@
 ##   This bash library can be used on Internet Home Router & Server from FREE Telecom : 
 ##    --> French FREEBOX: DELTA - POP - MINI - Revolution - ONE(end of sell 2020-07)
 ##    --> Italian ILIADBOX (since 2022-01-25) <=> Italian "Freebox POP" 
+##_________________________________________________________________________________________
+##
+##   This program / library is provided 'as is' with no warranty - use at your own risks
 ##
 ###########################################################################################
 
@@ -74,7 +77,7 @@ ILIADBOX_LAN_URL=""
 # NB: This option MUST be null: "" or commented if you do not use it 
 # NB: Working the same way for ILIADBOX_WAN_URL
 # As an example to access my box API from WAN I set :
-# FREEBOX_WAN_URL="https://fbx.my-public-domain.net:2111"
+# FREEBOX_WAN_URL="https://fbx.my-public-domain.net:4011"
 FREEBOX_WAN_URL=""
 ILIADBOX_WAN_URL=""
 
@@ -1179,7 +1182,7 @@ local_direct_dl_api () {
     [[ -n "$filename" ]] \
 	    && url="${url}/${filename}" \
 	    && local file_target=$(echo ${file_fullpath}|grep -o '[^/]*$') \
-	    || echo -e "${RED}file_fullpath parameters missing !${norm}"
+	    || echo -e "\n${RED}file_fullpath parameters missing !${norm}"
     [[ -n "$_SESSION_TOKEN" ]] \
 	    && options=(-H "X-Fbx-App-Auth: $_SESSION_TOKEN") \
 	    && options+=(-X GET)
@@ -1189,11 +1192,14 @@ local_direct_dl_api () {
 	    || options+=("-k")
     [[ -n "$extopts" ]] || echo -e "\n${RED}extopts parameters missing !${norm}\n" 
     [[ -n "$file_fullpath" ]] || echo -e "\n${RED}you must provide /path/to/download/file on the cmdline !${norm}\n" 
+if [[ -n "$file_fullpath" ]] 
+then	
     # direct download from freebox to the computer which launch this function
     echo -e "\n${WHITE}Downloading file from Freebox to local directory:${norm}"
     echo -e "\n${PURPL}${file_fullpath}${norm} ---> ${GREEN}./${file_target}${norm}${WHITE}"
     curl "$url" "${options[@]}" ${extopts[@]} ${file_target}
     echo -e "\n${WHITE}Done: \n${GREEN}$(du -sh ${file_target}|cut -d' ' -f1)${norm}\n"
+fi
     del_bundle_cert_file fbx-cacert               # remove CACERT BUNDLE FILE
 }
 
@@ -1404,7 +1410,7 @@ monitor_dl_task_api () {
                 size=$(get_json_value_for_key "$answer" "result.size")
                 size=$(($size/1024/1024))
 
-		[[ "$status" == "checking" ]] && \
+		[[ "$status" == "checking" ]] && sleep 2 && \
                 [[ "$size" -gt "1000" ]] && \
 		while [ "$eta" != "100" ]; do
 			relogin_freebox  # auto re-login if session is disconnected due to long task 
@@ -1793,7 +1799,6 @@ mon_fs_task_api () {
     local duration=""
     local eta=""
     local size_done=""
-    local size=""
     error=0
     action="mon" && [[ "$#" -ne "1" ]] && param_fs_task_err
     [[ "${error}" != "1" ]] && \
@@ -1823,13 +1828,13 @@ mon_fs_task_api () {
 		      [[ "${eta}" -gt "43200" ]] && sleep="60"
 		      #[[ "${eta}" == "0" && ${progress} =="0" ]] && eta="?"
                       size_done=$(get_json_value_for_key "$answer" "result.total_bytes_done")
-		      if [[ "${size_done[$i]}" -gt "10737418240" ]]
+		      if [[ "${size_done}" -gt "10737418240" ]]
 		      then	      
 			       size_done="$(($size_done/1024/1024/1024))GB"
-		      elif [[ "${size_done[$i]}" -gt "10485760" ]] 
+		      elif [[ "${size_done}" -gt "10485760" ]] 
 		      then	      
 			       size_done="$(($size_done/1024/1024))MB"
-		      elif [[ "${size_done[$i]}" -gt "10240" ]]
+		      elif [[ "${size_done}" -gt "10240" ]]
 		      then	      
 			       size_done="$(($size_done/1024))KB"
 		      else
@@ -1945,12 +1950,12 @@ error=1
         || local listfunct=${list_cmd}
 
 [[ "${action}" == "extract" ]] \
-&& echo -e "\nERROR: ${RED}<param> for \"${progfunct}\" must be some of:${norm}${BLUE}|src= \t\t\t# The archive file|dst=\t\t\t# The destination folder |password= \t\t# (Optionnal) The archive password|delete_archive= \t# true or false (Optionnal) Delete archive after extraction |overwrite= \t\t# true or false (Optionnal) Overwrite files on conflict${norm}\n" |tr "|" "\n" \
+&& echo -e "\nERROR: ${RED}<param> for \"${progfunct}\" must be some of:${norm}${BLUE}|src= \t\t\t# The archive file|dst=\t\t\t# The destination folder |password= \t\t# (Optionnal) The archive password|delete_archive= \t# boolean true or false (Optionnal) Delete archive after extraction |overwrite= \t\t# boolean true or false (Optionnal) Overwrite files on conflict${norm}\n" |tr "|" "\n" \
 && echo -e "NOTE: ${RED}minimum parameters to specify on cmdline to extract an archive: ${norm}\n${BLUE}src=|dst= ${norm}\n" |tr "|" "\n" \
 && echo -e "NOTE: ${RED}archive type will be autodetect from archive filename extention - supported type: ${norm}\n${BLUE}.zip|.iso|.cpio|.tar|.tar.gz|.tar.xz|.7z|.tar.7z|.tar.bz2 ${norm}\n" |tr "|" "\n" \
 && echo -e "EXAMPLE (simple):\n${BLUE}${progfunct} src=\"/FBXDSK/vm/archive.zip\" dst=\"/FBXDSK/vm\" ${norm}\n" \
 && echo -e "EXAMPLE (medium):\n${BLUE}${progfunct} src=\"/FBXDSK/vm/archive.zip\" dst=\"/FBXDSK/vm\" password=\"MyArchivePassword\" ${norm}\n" \
-&& echo -e "EXAMPLE (full):\n${BLUE}${progfunct} src=\"/FBXDSK/vm/archive.zip\" dst=\"/FBXDSK/vm\" password=\"MyArchivePassword\" delete_archive=\"true\" overwrite=\"false\" ${norm}\n" 
+&& echo -e "EXAMPLE (full):\n${BLUE}${progfunct} src=\"/FBXDSK/vm/archive.zip\" dst=\"/FBXDSK/vm\" password=\"MyArchivePassword\" delete_archive=\"1\" overwrite=\"0\" ${norm}\n" 
 
 [[ "${action}" == "archive" ]] \
 && echo -e "\nERROR: ${RED}<param> for \"${progfunct}\" must be some of:${norm}${BLUE}|files= \t\t\t# List of files fullpath separated by a coma \",\" |dst=\t\t\t# The destination archive (name of the archive) ${norm}\n" |tr "|" "\n" \
@@ -1982,7 +1987,7 @@ error=1
 && echo -e "EXAMPLE (multiple files/dir):\n${BLUE}${progfunct} files=\"/FBXDSK/vm/oldvm1-disk0.qcow2,/FBXDSK/vm/oldvm2-disk0.qcow2,/FBXDSK/vm/oldvm3-disk0.qcow2\" ${norm}\n"
 
 [[ "${action}" == "hash" ]] \
-&& echo -e "\nERROR: ${RED}<param> for \"${progfunct}\" must be some of:${norm}${BLUE}|src= \t\t\t# The source file path to hash |hash_type=\t\t\t# The hash algo, can be: md5 sha1 sha256 sha512  ${norm}\n" |tr "|" "\n" \
+&& echo -e "\nERROR: ${RED}<param> for \"${progfunct}\" must be some of:${norm}${BLUE}|src= \t\t\t\t# The source file path to hash |hash_type=\t\t\t# The hash algo, can be: md5 sha1 sha256 sha512  ${norm}\n" |tr "|" "\n" \
 && echo -e "NOTE: ${RED}minimum parameters to specify on cmdline to  ${action} a file/dir: ${norm}\n${BLUE}src=|hash_type= ${norm}\n" |tr "|" "\n" \
 && echo -e "EXAMPLE:\n${BLUE}${progfunct} src=\"/FBXDSK/vm/vm1-disk0.qcow2\" hash_type=\"sha256\"${norm}\n"
 
@@ -2342,7 +2347,7 @@ list_share_link () {
 	local i=0
         # writing 1 line of dashes (---) 
 	print_term_line 120
-        [[ ${token[$i]} == "" ]] && echo -e "\n${RED}No download links to list !${norm}\n"  
+        [[ ${token[$i]} == "" ]] && echo -e "\n${RED}No download share links to list !${norm}\n"  
         while [[ ${token[$i]} != "" ]]
         do
 	expire[$i]=$(date "+%Y-%m-%dT%H:%M:%S" -d@${expire[$i]})
@@ -2377,7 +2382,7 @@ get_share_link () {
         check_and_feed_share_link_param "${@}" \
         && [[ "${error}" != "1" ]] \
         && lnkresult=$(get_freebox_api /share_link/${token} 2>&1)
-	echo -e "lnkresult=${lnkresult}"
+	#echo -e "lnkresult=${lnkresult}" # debug
         colorize_output "${lnkresult}"
         unset action
 }
@@ -3032,7 +3037,8 @@ list_vm_prebuild_distros () {
 	[[ ${quiete} == "-h" ]] && \
 	echo -e "\n${WHITE}function param:\n\t\t-h\tprint this help\n\t\t-q\tsilently export distros variables - no output\n${norm}"
 	[[ ${quiete} != "-q" && ${quiete} != "-h" ]] && \
-        echo -e "\n${white}\t\t\t\tLIST AVAILIABLE 'Freebox Delta' PREBUILD VM DISTROS IMAGES:${norm}\n" 
+        echo -e "\n${white}\t\t\t\tLIST AVAILIABLE 'Freebox Delta' PREBUILD VM DISTROS IMAGES:${norm}\n"
+	[[ ${quiete} != "-q" && ${quiete} != "-h" ]] && \
 	print_term_line
         while [[ ${os[$i]} != "" ]]
         do
@@ -3047,7 +3053,7 @@ list_vm_prebuild_distros () {
         	[[ "$nc" -gt "32" ]] && name[$i]="${name[$i]}"
 		# printing distros list output
 		[[ ${quiete} != "-q" && ${quiete} != "-h" ]] && \
-		echo -e "${RED}id: $i${norm}\tname=${GREEN}${name[$i]//_/ }${norm}\tos=${GREEN}${os[$i]}${norm}\tfilename=${GREEN}${filename[$i]}${norm}\n\turl=${PURPL}${url[$i]}${norm}\n\thash=${PURPL}${hash[$i]}${norm}"
+		echo -e "${RED}id: $i${norm}\tname=${GREEN}${name[$i]//_/ }${norm}\tos=${GREEN}${os[$i]}${norm}\tfilename=${GREEN}${filename[$i]}${norm}\n\turl=${PURPL}${url[$i]}${norm}\n\thash=${PURPL}${hash[$i]}${norm}" && \
 	print_term_line
 	((i++))
 	done && echo || return 1
@@ -3678,11 +3684,33 @@ _check_freebox_api
 #
 #
 #____________
-# 20230103 :
+# 20230104 :
 #--> Fixing issue on filesystem tasks monitoring 
 #--> Icing & anonimizing the code 
 #--> Publishing the code on https://github.com/nbanb  
 #
+#
+#____________
+# 20230107 :
+#--> Fixing issue on monitor_dl_task_api when "checking" 
+#--> Fixing issue on "help" output on local_direct_dl_api function
+#
+#____________
+# 20230112 :
+#--> Fixing issue on list_vm_prebuild_distro with -q option and -h option 
+#
+#____________
+# 20230113 :
+#--> Adding 'use at your own risk' in the header of the library 
+#--> Fixing issue on size unit printing in mon_fs_task_api progress bar 
+#
+#____________
+# 20230114 :
+#--> Fixing issue on param_fs_err for function hash_fs_file output 
+#
+#____________
+# 20230116 :
+#--> Fixing issue on param_fs_err for function extract_fs_file help on booleans
 #
 #
 
